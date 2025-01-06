@@ -1,18 +1,38 @@
 {% set TETHYS_PERSIST = salt['environ.get']('TETHYS_PERSIST') %}
 
+{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredds_data/tethys' %}
+
 {% set GGST_CS_THREDDS_DIRECTORY = salt['environ.get']('GGST_CS_THREDDS_DIRECTORY') %}
-{% set GGST_CS_THREDDS_CATALOG = salt['environ.get']('GGST_CS_THREDDS_CATALOG') %}
 {% set GGST_CS_GLOBAL_OUTPUT_DIRECTORY = salt['environ.get']('GGST_CS_GLOBAL_OUTPUT_DIRECTORY') %}
+
+{% set GGST_CS_THREDDS_DIRECTORY_PATH = TETHYS_THREDDS_DATA_PATH + '/' + GGST_CS_THREDDS_DIRECTORY %}
+{% set GGST_CS_GLOBAL_OUTPUT_DIRECTORY_PATH = TETHYS_THREDDS_DATA_PATH + '/' + GGST_CS_GLOBAL_OUTPUT_DIRECTORY %}
+
+{% set TETHYS_DOMAIN = salt['environ.get']('TETHYS_DOMAIN') %}
+{% set TETHYS_PROTOCOL = salt['environ.get']('TETHYS_PROTOCOL') %}
+{% set GGST_CS_THREDDS_CATALOG_SUBPATH = salt['environ.get']('GGST_CS_THREDDS_CATALOG_SUBPATH') %}
+{% set GGST_CS_THREDDS_CATALOG = TETHYS_PROTOCOL + '://' + TETHYS_DOMAIN + GGST_CS_THREDDS_CATALOG_SUBPATH %}
+
 {% set GGST_CS_EARTHDATA_USERNAME = salt['environ.get']('GGST_CS_EARTHDATA_USERNAME') %}
 {% set GGST_CS_EARTHDATA_PASS = salt['environ.get']('GGST_CS_EARTHDATA_PASS') %}
 {% set GGST_CS_CONDA_PYTHON_PATH = salt['environ.get']('GGST_CS_CONDA_PYTHON_PATH') %}
 
+{% set DATA_FOLDER_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/thredds/ggst' %}
+
+
+GGST_tHREDDS_Download_Data: 
+    cmd.run:
+        - name: wget -O {{ GGST_CS_THREDDS_DIRECTORY }} {{ DATA_FOLDER_URL }}
+        - shell: /bin/bash
+        - require:
+            - file: {{ GGST_CS_THREDDS_DIRECTORY }}
+
 Set_GGST_Settings:
   cmd.run:
     - name: > 
-        tethys app_settings set ggst grace_thredds_directory {{ GGST_CS_THREDDS_DIRECTORY }} &&
+        tethys app_settings set ggst grace_thredds_directory {{ GGST_CS_THREDDS_DIRECTORY_PATH }} &&
         tethys app_settings set ggst grace_thredds_catalog {{ GGST_CS_THREDDS_CATALOG }} &&
-        tethys app_settings set ggst global_output_directory {{ GGST_CS_GLOBAL_OUTPUT_DIRECTORY }} &&
+        tethys app_settings set ggst global_output_directory {{ GGST_CS_GLOBAL_OUTPUT_DIRECTORY_PATH }} &&
         tethys app_settings set ggst earthdata_username {{ GGST_CS_EARTHDATA_USERNAME }} &&
         tethys app_settings set ggst earthdata_pass {{ GGST_CS_EARTHDATA_PASS }} &&
         tethys app_settings set ggst conda_python_path {{ GGST_CS_CONDA_PYTHON_PATH }}

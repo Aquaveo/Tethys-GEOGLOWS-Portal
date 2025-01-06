@@ -69,7 +69,7 @@ DownloadFile:
         - name: wget -O {{ DATA_FILE_DESTINATION }}/combined_all_data_122.nc {{ DATA_FILE_URL }}
         - shell: /bin/bash
         - require:
-            - file: {{ APPLICATION_PATH }}/tethysapp/geoglows_dashboard/workspaces/app_workspaces/hydrosos/streamflow/vpu_122
+            - file: {{ DATA_FILE_DESTINATION }}
 
 Initiate_Geoserver:
     cmd.run: 

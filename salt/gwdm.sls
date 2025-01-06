@@ -16,9 +16,18 @@
 {% set TETHYS_GS_USERNAME = salt['environ.get']('TETHYS_GS_USERNAME') %}
 {% set TETHYS_GS_PROTOCOL = salt['environ.get']('TETHYS_GS_PROTOCOL') %}
 
+{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredds_data/tethys' %}
+
 {% set GWDM_CS_DATA_DIRECTORY = salt['environ.get']('GWDM_CS_DATA_DIRECTORY') %}
 {% set GWDM_CS_THREDDS_DIRECTORY = salt['environ.get']('GWDM_CS_THREDDS_DIRECTORY') %}
-{% set GWDM_CS_THREDDS_CATALOG = salt['environ.get']('GWDM_CS_THREDDS_CATALOG') %}
+
+{% set GWDM_CS_DATA_DIRECTORY_PATH = TETHYS_THREDDS_DATA_PATH + '/' + GWDM_CS_DATA_DIRECTORY %}
+{% set GWDM_CS_THREDDS_DIRECTORY_PATH = TETHYS_THREDDS_DATA_PATH + '/' + GWDM_CS_THREDDS_DIRECTORY %}
+
+{% set TETHYS_DOMAIN = salt['environ.get']('TETHYS_DOMAIN') %}
+{% set TETHYS_PROTOCOL = salt['environ.get']('TETHYS_PROTOCOL') %}
+{% set GWDM_CS_THREDDS_CATALOG_SUBPATH = salt['environ.get']('GWDM_CS_THREDDS_CATALOG_SUBPATH') %}
+{% set GWDM_CS_THREDDS_CATALOG = TETHYS_PROTOCOL + '://' + TETHYS_DOMAIN + GWDM_CS_THREDDS_CATALOG_SUBPATH %}
 
 {% set GWDM_WORKSPACE_NAME = salt['environ.get']('GWDM_WORKSPACE_NAME') %}
 {% set GWDM_STORE_NAME = salt['environ.get']('GWDM_STORE_NAME') %}
@@ -26,6 +35,16 @@
 {% set GWDM_REGION_LAYER_NAME = salt['environ.get']('GWDM_REGION_LAYER_NAME') %}
 {% set GWDM_AQUIFER_LAYER_NAME = salt['environ.get']('GWDM_AQUIFER_LAYER_NAME') %}
 {% set GWDM_WELL_LAYER_NAME = salt['environ.get']('GWDM_WELL_LAYER_NAME') %}
+
+
+{% set DATA_FOLDER_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/thredds/gwdm' %}
+
+GGST_tHREDDS_Download_Data: 
+    cmd.run:
+        - name: wget -O {{ GWDM_CS_DATA_DIRECTORY_PATH }} {{ DATA_FOLDER_URL }}
+        - shell: /bin/bash
+        - require:
+            - file: {{ GWDM_CS_DATA_DIRECTORY_PATH }}
 
 
 Link_Persistent_Stores_Database_GWDM:
@@ -55,8 +74,8 @@ Sync_GWDM_Stores_Persistent_Stores:
 Set_GWDM_Settings:
   cmd.run:
     - name: > 
-        tethys app_settings set gwdm gw_data_directory {{ GWDM_CS_DATA_DIRECTORY }} && 
-        tethys app_settings set gwdm gw_thredds_directory {{ GWDM_CS_THREDDS_DIRECTORY }} &&
+        tethys app_settings set gwdm gw_data_directory {{ GWDM_CS_DATA_DIRECTORY_PATH }} && 
+        tethys app_settings set gwdm gw_thredds_directory {{ GWDM_CS_THREDDS_DIRECTORY_PATH }} &&
         tethys app_settings set gwdm gw_thredds_catalog {{ GWDM_CS_THREDDS_CATALOG }}
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
