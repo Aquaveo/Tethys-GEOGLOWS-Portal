@@ -1,4 +1,4 @@
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2
+FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as base
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
@@ -68,7 +68,6 @@ ENV TETHYS_GS_PROTOCOL=""
 ENV TETHYS_GS_HOST_PUB=""
 ENV TETHYS_GS_PORT_PUB=""
 ENV TETHYS_GS_PROTOCOL_PUB=""
-
 
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
