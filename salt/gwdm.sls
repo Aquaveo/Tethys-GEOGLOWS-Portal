@@ -1,7 +1,7 @@
 {% set TETHYS_PERSIST = salt['environ.get']('TETHYS_PERSIST') %}
-{% set THREDDS_SERVICE_NAME = 'primary_thredds' %}
-{% set GS_SERVICE_NAME = 'primary_geoserver' %}
-{% set POSTGIS_SERVICE_NAME = 'primary_postgis' %}
+{% set THREDDS_SERVICE_NAME = salt['environ.get']('THREDDS_SERVICE_NAME') %}
+{% set GS_SERVICE_NAME = salt['environ.get']('GS_SERVICE_NAME') %}
+{% set POSTGIS_SERVICE_NAME = salt['environ.get']('POSTGIS_SERVICE_NAME') %}
 
 
 {% set TETHYS_HOME = salt['environ.get']('TETHYS_HOME') %}
@@ -55,13 +55,13 @@ Link_Persistent_Stores_Database_GWDM:
 
 Link_Spatial_Geoserver_Dataset_Service:
   cmd.run:
-    - name: "tethys link spatial:{{ GS_SERVICE_NAME }} gwdm:ds_spatial:primary_geoserver"
+    - name: "tethys link spatial:{{ GS_SERVICE_NAME }} gwdm:ds_spatial:{{ GS_SERVICE_NAME}}"
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
 
 Link_Spatial_Thredds_Dataset_Service:
   cmd.run:
-    - name: "tethys link spatial:{{ THREDDS_SERVICE_NAME }} gwdm:ds_spatial:primary_thredds"
+    - name: "tethys link spatial:{{ THREDDS_SERVICE_NAME }} gwdm:ds_spatial:{{ THREDDS_SERVICE_NAME}}"
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
 

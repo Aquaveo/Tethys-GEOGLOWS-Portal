@@ -23,7 +23,10 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
 FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
 
 
-ENV TETHYS_DOMAIN = "localhost" 
+ENV TETHYS_DOMAIN="localhost" 
+ENV POSTGIS_SERVICE_NAME=""
+ENV GS_SERVICE_NAME=""
+ENV THREDDS_SERVICE_NAME=""
 
 # example --> /var/lib/tethys_persist/thredds_data/tethys
 
@@ -65,9 +68,6 @@ ENV TETHYS_GS_PROTOCOL=""
 ENV TETHYS_GS_HOST_PUB=""
 ENV TETHYS_GS_PORT_PUB=""
 ENV TETHYS_GS_PROTOCOL_PUB=""
-ENV TETHYS_GS_URL=""
-ENV TETHYS_GS_URL_PUB=""
-
 
 COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
 

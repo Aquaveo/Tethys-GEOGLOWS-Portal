@@ -25,8 +25,8 @@
 
 
 
-{% set POSTGIS_SERVICE_NAME = 'primary_postgis' %}
-{% set GS_SERVICE_NAME = 'primary_geoserver' %}
+{% set POSTGIS_SERVICE_NAME = salt['environ.get']('POSTGIS_SERVICE_NAME') %}
+{% set GS_SERVICE_NAME = salt['environ.get']('GS_SERVICE_NAME') %}
 
 {% set APPLICATION_PATH = TETHYS_HOME + '/apps/tethysapp-geoglows_dashboard' %}
 {% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/tethysapp/geoglows_dashboard/workspaces/app_workspaces/hydrosos/streamflow/vpu_122' %}
@@ -48,7 +48,7 @@ Geoglows_Dashboard_Sync_Persistent_Stores:
 
 Geoglows_Dashboard_Link_Spatial__Dataset_Service:
     cmd.run:
-        - name: "tethys link spatial:{{ GS_SERVICE_NAME }} geoglows_dashboard:ds_spatial:primary_geoserver"
+        - name: "tethys link spatial:{{ GS_SERVICE_NAME }} geoglows_dashboard:ds_spatial:{{ GS_SERVICE_NAME}}"
         - shell: /bin/bash
         - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethys_services_complete" ];"
 
