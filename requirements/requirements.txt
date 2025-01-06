@@ -1,7 +1,7 @@
 #geoglows_dashboard
 oauth2client
 earthengine-api
-s3fs=2024.3.1
+s3fs==2024.3.1
 geoglows
 xarray
 geopandas
@@ -12,16 +12,13 @@ urllib3<2
 
 #ggst
 rioxarray
-# geopandas --> Commented because it is already included
 area
 utm
 pyshp
 
 #gwdm
 
-#geopandas ---> Commented because it is already included
 scipy
-rioxarray
 geojson
 simplejson
 pandarallel
@@ -30,7 +27,6 @@ matplotlib
 sphinx_rtd_theme
 sphinx
 sphinxcontrib-napoleon
-
 
 #general
 geoserver-rest
