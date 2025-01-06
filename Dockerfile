@@ -12,8 +12,8 @@ COPY requirements/*.txt .
 ########################
 # INSTALL APPLICATIONS #
 ########################
-RUN pip install --no-cache-dir --quiet -r pip_requirements.txt && \
-    micromamba install --yes -c conda-forge --file requirements.txt && \
+RUN pip install --no-cache-dir --quiet -r pip_requirements.txt
+RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     micromamba clean --all --yes && \
     cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
