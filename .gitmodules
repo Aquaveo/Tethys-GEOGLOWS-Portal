@@ -6,7 +6,7 @@
 	path = apps/ggst
 	url = https://github.com/Aquaveo/ggst.git
 	branch = tethys4_upgrade
-[submodule "apps/gwdm"]
-	path = apps/gwdm
+[submodule "gwdm"]
+	path = gwdm
 	url = https://github.com/Aquaveo/gwdm.git
 	branch = tethys_4_upgrade
