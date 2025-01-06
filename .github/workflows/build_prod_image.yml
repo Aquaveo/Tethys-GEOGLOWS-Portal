@@ -1,0 +1,71 @@
+name: build_push_deploy_prod_image
+# Push to docker hub if tag has been created.
+on:
+  push:
+    tags:
+      - '*'
+env:
+  DOCKER_HUB_ORG: aquaveollc
+  DOCKER_REPO: geoglows_portal
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # build image
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+
+      # Step 4: Update submodules recursively
+      - name: Update submodules recursively
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Set Tag
+        run: |
+          echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
+          echo "TAG_LATEST=latest" >> $GITHUB_ENV
+
+      - name: Test Tag
+        run: |
+          echo $TAG
+
+      - name: check_docker_file_changed_files
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v37
+        with:
+          files_yaml: |
+            docker:
+                - 'apps/**'
+                - 'salt/**'
+                - 'extensions/**'
+                - 'config/**'
+                - 'Dokerfile'
+                - 'requirements/**'
+
+      - name: Set up Docker Buildx
+        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_BUILDER_USERNAME }}
+          password: ${{ secrets.DOCKER_BUILDER_TOKEN }}
+
+      - name: Build and push
+        if: steps.changed-files-yaml.outputs.docker_any_changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG }}
+            ${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}:${{ env.TAG_LATEST }}
+          cache-from: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest
+          cache-to: type=registry,ref=${{ env.DOCKER_HUB_ORG }}/${{ env.DOCKER_REPO }}-cache:latest,mode=max
