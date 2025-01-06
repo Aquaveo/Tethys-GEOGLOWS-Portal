@@ -1,4 +1,3 @@
-#geoglows_dashboard
 oauth2client
 earthengine-api
 s3fs==2024.3.1
@@ -9,15 +8,10 @@ openpyxl
 psycopg2
 pyogrio
 urllib3<2
-
-#ggst
 rioxarray
 area
 utm
 pyshp
-
-#gwdm
-
 scipy
 geojson
 simplejson
@@ -27,7 +21,5 @@ matplotlib
 sphinx_rtd_theme
 sphinx
 sphinxcontrib-napoleon
-
-#general
 geoserver-rest
 numpy==1.26.4
