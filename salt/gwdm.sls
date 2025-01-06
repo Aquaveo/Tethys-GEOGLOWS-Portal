@@ -39,7 +39,7 @@
 
 {% set DATA_FOLDER_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/thredds/gwdm' %}
 
-GGST_tHREDDS_Download_Data: 
+GWDM_tHREDDS_Download_Data: 
     cmd.run:
         - name: wget -O {{ GWDM_CS_DATA_DIRECTORY_PATH }} {{ DATA_FOLDER_URL }}
         - shell: /bin/bash
