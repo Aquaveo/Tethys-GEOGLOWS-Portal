@@ -16,11 +16,9 @@ RUN pip install --no-cache-dir --quiet -r pip_requirements.txt && \
     micromamba install --yes -c conda-forge --file requirements.txt && \
     micromamba clean --all --yes
 
-RUN ls -la ${TETHYS_HOME}/apps
-RUN ls -la ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard
-
-
-RUN cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
+RUN ls -la ${TETHYS_HOME}/apps && \
+    ls -la ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard  && \
+    cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q
 
