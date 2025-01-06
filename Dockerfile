@@ -69,8 +69,9 @@ ENV TETHYS_GS_HOST_PUB=""
 ENV TETHYS_GS_PORT_PUB=""
 ENV TETHYS_GS_PROTOCOL_PUB=""
 
-COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
 
+COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
+COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
 COPY salt/ /srv/salt/
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
