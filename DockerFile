@@ -23,6 +23,8 @@ RUN pip install --no-cache-dir --quiet -r piprequirements.txt && \
 # Final Image Build
 FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
 
+COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
+
 COPY salt/ /srv/salt/
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1

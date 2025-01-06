@@ -32,5 +32,6 @@ sphinx
 sphinxcontrib-napoleon
 
 
-#general fixes
+#general
+geoserver-rest
 numpy==1.26.4
