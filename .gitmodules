@@ -1,0 +1,4 @@
+[submodule "tethysapp-geoglows_dashboard"]
+	path = apps/tethysapp-geoglows_dashboard
+	url = git@github.com:Aquaveo/tethysapp-geoglows_dashboard.git
+	branch = main
