@@ -26,7 +26,7 @@ ENV TETHYS_DOMAIN="localhost"
 ENV POSTGIS_SERVICE_NAME=""
 ENV GS_SERVICE_NAME=""
 ENV THREDDS_SERVICE_NAME=""
-
+ENV POSTGRES_USER="postgres"
 # example --> /var/lib/tethys_persist/thredds_data/tethys
 
 ENV TETHYS_THREDDS_DATA_PATH=""
