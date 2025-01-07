@@ -75,6 +75,8 @@ COPY salt/ /srv/salt/
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN rm -Rf ~/.cache/pip && \
+    pip uninstall -y numpy && \
+    micromamba install --yes -c conda-forge numpy==1.26.4 && \
     micromamba clean --all --yes
 
 EXPOSE 80
