@@ -1,4 +1,4 @@
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as base
+FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as base
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
@@ -19,7 +19,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q
 
 # Final Image Build
-FROM tethysplatform/tethys-core:dev-py3.12-dj3.2 as build
+FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as build
 
 
 ENV TETHYS_DOMAIN="localhost" 
