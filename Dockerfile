@@ -15,7 +15,6 @@ COPY requirements/*.txt .
 RUN micromamba install --yes -c conda-forge --file requirements.txt && \
     pip uninstall -y numpy && \
     pip install numpy==1.26.4 && \
-    micromamba remove -y numpy && \
     cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
     cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q
