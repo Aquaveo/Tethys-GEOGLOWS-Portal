@@ -12,26 +12,26 @@ S3_PREFIX="$2"
 LOCAL_BASE_DIR="$3"
 
 # Directories for configuration files
-TOMCAT_CONF_DIR="$LOCAL_BASE_DIR/conf"
-CATALOG_DIR="$LOCAL_BASE_DIR/content/thredds"
-PUBLIC_DATA_DIR="$LOCAL_BASE_DIR/content/thredds/public/thredds_data"
-LOGS_DIR="$LOCAL_BASE_DIR/logs"
+CONF_DIR="$LOCAL_BASE_DIR/conf"
+PUBLIC_DATA_DIR="$LOCAL_BASE_DIR/data"
+THREDDS_LOGS_DIR="$LOCAL_BASE_DIR/logs/thredds"
+TOMCAT_LOGS_DIR="$LOCAL_BASE_DIR/logs/tomcat"
 
 # Create necessary directories
 echo "Creating directories..."
-mkdir -p "$TOMCAT_CONF_DIR"
-mkdir -p "$CATALOG_DIR"
+mkdir -p "$CONF_DIR"
 mkdir -p "$PUBLIC_DATA_DIR"
-mkdir -p "$LOGS_DIR"
+mkdir -p "$THREDDS_LOGS_DIR"
+mkdir -p "$TOMCAT_LOGS_DIR"
 
 # Download configuration files from S3
 echo "Downloading configuration files from S3..."
-aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/tomcat-users.xml" "$TOMCAT_CONF_DIR/tomcat-users.xml"
-aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/catalog.xml" "$CATALOG_DIR/catalog.xml"
-aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/threddsConfig.xml" "$CATALOG_DIR/threddsConfig.xml"
+aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/tomcat-users.xml" "$CONF_DIR/tomcat-users.xml"
+aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/catalog.xml" "$CONF_DIR/catalog.xml"
+aws s3 cp "s3://$S3_BUCKET_NAME/$S3_PREFIX/threddsConfig.xml" "$CONF_DIR/threddsConfig.xml"
 
 # Verify files were downloaded
-if [[ -f "$TOMCAT_CONF_DIR/tomcat-users.xml" && -f "$CATALOG_DIR/catalog.xml" && -f "$CATALOG_DIR/threddsConfig.xml" ]]; then
+if [[ -f "$CONF_DIR/tomcat-users.xml" && -f "$CONF_DIR/catalog.xml" && -f "$CONF_DIR/threddsConfig.xml" ]]; then
     echo "Configuration files downloaded successfully."
 else
     echo "Error: One or more configuration files could not be downloaded."
