@@ -76,8 +76,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN rm -Rf ~/.cache/pip && \
     pip uninstall -y numpy && \
-    # pip install numpy==1.26.4 && \
-    micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    pip install numpy==1.26.4 && \
     micromamba clean --all --yes
 
 EXPOSE 80
