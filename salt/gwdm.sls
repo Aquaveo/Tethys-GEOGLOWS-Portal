@@ -25,9 +25,9 @@
 {% set GWDM_CS_THREDDS_DIRECTORY_PATH = TETHYS_THREDDS_DATA_PATH + '/' + GWDM_CS_THREDDS_DIRECTORY %}
 
 {% set TETHYS_DOMAIN = salt['environ.get']('TETHYS_DOMAIN') %}
-{% set TETHYS_PROTOCOL = salt['environ.get']('TETHYS_PROTOCOL') %}
+{% set TETHYS_THREDDS_PROTOCOL = salt['environ.get']('TETHYS_THREDDS_PROTOCOL') %}
 {% set GWDM_CS_THREDDS_CATALOG_SUBPATH = salt['environ.get']('GWDM_CS_THREDDS_CATALOG_SUBPATH') %}
-{% set GWDM_CS_THREDDS_CATALOG = TETHYS_PROTOCOL + '://' + TETHYS_DOMAIN + GWDM_CS_THREDDS_CATALOG_SUBPATH %}
+{% set GWDM_CS_THREDDS_CATALOG = TETHYS_THREDDS_PROTOCOL + '://' + TETHYS_DOMAIN + GWDM_CS_THREDDS_CATALOG_SUBPATH %}
 
 {% set GWDM_WORKSPACE_NAME = salt['environ.get']('GWDM_WORKSPACE_NAME') %}
 {% set GWDM_STORE_NAME = salt['environ.get']('GWDM_STORE_NAME') %}
@@ -80,6 +80,8 @@ Set_GWDM_Settings:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/gwdm_complete" ];"
 
+
+## uncoment when fix it
 Post_Setup_GWDM:
   cmd.run:
     - name: "python {{ TETHYS_HOME }}/post_setup_gwdm.py -gh {{ TETHYS_GS_PROTOCOL }}://{{ TETHYS_GS_HOST }} -p {{ TETHYS_GS_PORT }} -u {{ TETHYS_GS_USERNAME }} -pw {{ TETHYS_GS_PASSWORD }} -s {{ GWDM_STORE_NAME }} -w {{ GWDM_WORKSPACE_NAME }} -db {{ GWDM_TABLE_NAME }} -dbp {{ TETHYS_DB_PORT }} -dbh {{ TETHYS_DB_HOST }} -dbu {{ POSTGRES_USER }} -dbpw {{ POSTGRES_PASSWORD }} -rt {{ GWDM_REGION_LAYER_NAME }} -at {{ GWDM_AQUIFER_LAYER_NAME }} -wt {{ GWDM_WELL_LAYER_NAME }}"

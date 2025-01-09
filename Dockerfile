@@ -22,7 +22,8 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt && \
 FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as build
 
 
-ENV TETHYS_DOMAIN="localhost" 
+ENV TETHYS_DOMAIN="localhost"
+ENV TETHYS_THREDDS_PROTOCOL="http"
 ENV POSTGIS_SERVICE_NAME=""
 ENV GS_SERVICE_NAME=""
 ENV THREDDS_SERVICE_NAME=""
