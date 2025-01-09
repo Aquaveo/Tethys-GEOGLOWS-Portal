@@ -1,6 +1,6 @@
 {% set TETHYS_PERSIST = salt['environ.get']('TETHYS_PERSIST') %}
 
-{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredds_data/tethys' %}
+{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredsd/data' %}
 
 {% set GGST_CS_THREDDS_DIRECTORY = salt['environ.get']('GGST_CS_THREDDS_DIRECTORY') %}
 {% set GGST_CS_GLOBAL_OUTPUT_DIRECTORY = salt['environ.get']('GGST_CS_GLOBAL_OUTPUT_DIRECTORY') %}

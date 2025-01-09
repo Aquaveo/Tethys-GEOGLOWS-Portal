@@ -12,7 +12,7 @@ rioxarray
 area
 utm
 pyshp
-scipy
+scipy==1.12.0
 geojson
 simplejson
 pandarallel
@@ -22,5 +22,5 @@ sphinx_rtd_theme
 sphinx
 sphinxcontrib-napoleon
 geoserver-rest
-gstools
+gstools==1.5.1
 numpy==1.26.4

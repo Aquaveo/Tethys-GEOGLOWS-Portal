@@ -16,7 +16,7 @@
 {% set TETHYS_GS_USERNAME = salt['environ.get']('TETHYS_GS_USERNAME') %}
 {% set TETHYS_GS_PROTOCOL = salt['environ.get']('TETHYS_GS_PROTOCOL') %}
 
-{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredds_data/tethys' %}
+{% set TETHYS_THREDDS_DATA_PATH = TETHYS_PERSIST + '/thredds/data' %}
 
 {% set GWDM_CS_DATA_DIRECTORY = salt['environ.get']('GWDM_CS_DATA_DIRECTORY') %}
 {% set GWDM_CS_THREDDS_DIRECTORY = salt['environ.get']('GWDM_CS_THREDDS_DIRECTORY') %}
