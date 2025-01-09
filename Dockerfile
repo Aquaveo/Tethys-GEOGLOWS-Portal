@@ -27,7 +27,7 @@ ENV POSTGIS_SERVICE_NAME=""
 ENV GS_SERVICE_NAME=""
 ENV THREDDS_SERVICE_NAME=""
 ENV POSTGRES_USER="postgres"
-# example --> /var/lib/tethys_persist/thredds_data/tethys
+# example --> /var/lib/tethys_persist/data
 
 ENV TETHYS_THREDDS_DATA_PATH=""
 
@@ -43,12 +43,12 @@ ENV GWDM_CS_DATA_DIRECTORY=""
 
 # example --> gwdm_thredds_directory
 ENV GWDM_CS_THREDDS_DIRECTORY=""
-# example --> /thredds/catalog/data/tethys/gwdm_thredds_directory/catalog.xml
+# example --> /thredds/catalog/data/gwdm_thredds_directory/catalog.xml
 ENV GWDM_CS_THREDDS_CATALOG_SUBPATH=""
 
 # example --> ggst_thredds_directory
 ENV GGST_CS_THREDDS_DIRECTORY=""
-# example --> /thredds/catalog/data/tethys/ggst_thredds_directory/catalog.xml
+# example --> /thredds/catalog/data/ggst_thredds_directory/catalog.xml
 ENV GGST_CS_THREDDS_CATALOG_SUBPATH=""
 
 
