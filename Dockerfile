@@ -30,6 +30,8 @@ ENV THREDDS_SERVICE_NAME="primary_thredds"
 ENV POSTGRES_USER="postgres"
 ENV TETHYS_THREDDS_DATA_PATH="/var/lib/tethys_persist/data" 
 
+ENV GEOGLOWS_DASHBOARD_PATH="/opt/conda/envs/tethys/lib/python3.10/site-packages/tethysapp/geoglows_dashboard"
+
 ENV GWDM_WORKSPACE_NAME="gwdm"
 ENV GWDM_STORE_NAME="gwdm"
 ENV GWDM_TABLE_NAME="gwdm_gwdb"
@@ -79,4 +81,4 @@ RUN rm -Rf ~/.cache/pip && \
     micromamba clean --all --yes
 
 EXPOSE 80
-CMD bash run.sh
+CMD bash -c "salt-call --local state.apply -l info | tee /var/log/salt.log && bash run.sh"

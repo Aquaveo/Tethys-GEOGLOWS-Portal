@@ -23,13 +23,13 @@
 {% set TETHYS_GS_URL = TETHYS_GS_PROTOCOL +'://' + TETHYS_GS_USERNAME + ':' + TETHYS_GS_PASSWORD + '@' + TETHYS_GS_HOST + ':' + TETHYS_GS_PORT %}
 {% set TETHYS_GS_URL_PUB = TETHYS_GS_PROTOCOL_PUB +'://' + TETHYS_GS_USERNAME + ':' + TETHYS_GS_PASSWORD + '@' + TETHYS_GS_HOST_PUB + ':' + TETHYS_GS_PORT_PUB %}
 
+{% set APPLICATION_PATH = salt['environ.get']('GEOGLOWS_DASHBOARD_PATH') %}
 
 
 {% set POSTGIS_SERVICE_NAME = salt['environ.get']('POSTGIS_SERVICE_NAME') %}
 {% set GS_SERVICE_NAME = salt['environ.get']('GS_SERVICE_NAME') %}
 
-{% set APPLICATION_PATH = TETHYS_HOME + '/apps/tethysapp-geoglows_dashboard' %}
-{% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/tethysapp/geoglows_dashboard/workspaces/app_workspaces/hydrosos/streamflow/vpu_122' %}
+{% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/workspaces/app_workspaces/hydrosos/streamflow/vpu_122' %}
 {% set DATA_FILE_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/combined_all_data_122.nc' %}
 
 
@@ -64,27 +64,27 @@ VerifyFile:
     - require:
       - file: EnsureDirectoryExists
 
-DownloadFile: 
-    cmd.run:
-        - name: wget -O {{ DATA_FILE_DESTINATION }}/combined_all_data_122.nc {{ DATA_FILE_URL }}
-        - shell: /bin/bash
-        - require:
-            - file: {{ DATA_FILE_DESTINATION }}
+# DownloadFile: 
+#     cmd.run:
+#         - name: wget -O {{ DATA_FILE_DESTINATION }}/combined_all_data_122.nc {{ DATA_FILE_URL }}
+#         - shell: /bin/bash
+#         - require:
+#             - file: {{ DATA_FILE_DESTINATION }}
 
 Initiate_Geoserver:
     cmd.run: 
-        - name: "tethys manage shell < {{ APPLICATION_PATH }}/tethysapp/geoglows_dashboard/init_geoserver.py"
+        - name: "tethys manage shell < {{ APPLICATION_PATH }}/init_geoserver.py"
         - shell: /bin/bash
-        - cwd: {{ APPLICATION_PATH }}/tethysapp/geoglows_dashboard
+        - cwd: {{ APPLICATION_PATH }}
         - stream: True
         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];"
 
 
 Initiate_River_Tables:
     cmd.run: 
-        - name: "tethys manage shell < {{ APPLICATION_PATH }}/tethysapp/geoglows_dashboard/init_database.py"
+        - name: "tethys manage shell < {{ APPLICATION_PATH }}/init_database.py"
         - shell: /bin/bash
-        - cwd: {{ APPLICATION_PATH }}/tethysapp/geoglows_dashboard
+        - cwd: {{ APPLICATION_PATH }}
         - stream: True
         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_river_tables_complete" ];"
 
