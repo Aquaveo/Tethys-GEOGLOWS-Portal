@@ -64,7 +64,6 @@ VerifyFile:
     - require:
       - file: EnsureDirectoryExists
 
-
 Initiate_Geoserver:
     cmd.run: 
         - name: "cd {{ APPLICATION_PATH }} && tethys manage shell < init_geoserver.py"
@@ -73,14 +72,13 @@ Initiate_Geoserver:
         - stream: True
         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];"
 
-
-Initiate_River_Tables:
-    cmd.run: 
-        - name: "cd {{ APPLICATION_PATH }} &&  tethys manage shell < init_database.py"
-        - shell: /bin/bash
-        - cwd: {{ APPLICATION_PATH }}
-        - stream: True
-        - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_river_tables_complete" ];"
+# Initiate_River_Tables:
+#     cmd.run: 
+#         - name: "cd {{ APPLICATION_PATH }} &&  tethys manage shell < init_database.py"
+#         - shell: /bin/bash
+#         - cwd: {{ APPLICATION_PATH }}
+#         - stream: True
+#         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_river_tables_complete" ];"
 
 Geoglows_Dashboard_Flag_Complete:
   cmd.run:
