@@ -49,7 +49,7 @@ Create_THREDDS_Spatial_Dataset_Service:
 
 Create_GeoServer_Spatial_Dataset_Service:
   cmd.run:
-    - name: "tethys services create spatial -t GeoServer -n {{ GS_SERVICE_NAME }} -c {{ TETHYS_GS_URL }} -p {{ TETHYS_GS_URL_PUB}}"
+    - name: "tethys services create spatial -t GeoServer -n {{ GS_SERVICE_NAME }} -c {{ TETHYS_GS_URL }} -p {{ TETHYS_GS_URL_PUB }}"
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_services_complete" ];"
 
