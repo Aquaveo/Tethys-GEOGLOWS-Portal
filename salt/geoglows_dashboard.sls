@@ -38,19 +38,19 @@ Geoglows_Dashboard_Link_PostGIS_Database_Service:
     cmd.run:
         - name: "tethys link persistent:{{ POSTGIS_SERVICE_NAME }} geoglows_dashboard:ps_database:primary_db"
         - shell: /bin/bash
-        - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_services_complete" ];"
+        - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/geoglows_dashboard_complete" ];"
 
 Geoglows_Dashboard_Sync_Persistent_Stores:
     cmd.run:
         - name: tethys syncstores geoglows_dashboard
         - shell: /bin/bash
-        - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethys_services_complete" ];"
+        - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/geoglows_dashboard_complete" ];"
 
 Geoglows_Dashboard_Link_Spatial__Dataset_Service:
     cmd.run:
         - name: "tethys link spatial:{{ GS_SERVICE_NAME }} geoglows_dashboard:ds_spatial:{{ GS_SERVICE_NAME}}"
         - shell: /bin/bash
-        - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/tethys_services_complete" ];"
+        - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/geoglows_dashboard_complete" ];"
 
 EnsureDirectoryExists:
   file.directory:
@@ -84,8 +84,24 @@ Initiate_River_Tables:
 
 Geoglows_Dashboard_Flag_Complete:
   cmd.run:
-    - name: touch {{ TETHYS_PERSIST }}/init_river_tables_complete
+    - name: touch {{ TETHYS_PERSIST }}/geoglows_dashboard_complete
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/geoglows_dashboard_complete" ];" 
     - require:
       - cmd: geoglows_dashboard_complete
+
+Init_Db_Geoglows_Dashboard_Flag_Complete:
+  cmd.run:
+    - name: touch {{ TETHYS_PERSIST }}/init_river_tables_complete
+    - shell: /bin/bash
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_river_tables_complete" ];" 
+    - require:
+      - cmd: init_river_tables_complete
+
+Init_GeoServer_SetUp_Geoglows_Dashboard_Flag_Complete:
+  cmd.run:
+    - name: touch {{ TETHYS_PERSIST }}/init_geoserver_complete
+    - shell: /bin/bash
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];" 
+    - require:
+      - cmd: init_geoserver_complete
