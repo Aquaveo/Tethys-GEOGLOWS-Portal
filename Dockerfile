@@ -1,26 +1,5 @@
 FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as base
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
-#############
-# ADD FILES #
-#############
-
-COPY apps ${TETHYS_HOME}/apps
-COPY requirements/*.txt .
-
-########################
-# INSTALL APPLICATIONS #
-########################
-RUN micromamba install --yes -c conda-forge --file requirements.txt && \
-    cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
-    cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q
-    
-
-# Final Image Build
-FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as build
-
 
 ENV TETHYS_DOMAIN="localhost"
 ENV TETHYS_THREDDS_PROTOCOL="http"
@@ -69,16 +48,30 @@ ENV THREDDS_TDS_PUBLIC_HOST=""
 ENV THREDDS_TDS_PRIVATE_HOST=""
 
 
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
+#############
+# ADD FILES #
+#############
+
+COPY apps ${TETHYS_HOME}/apps
+COPY requirements/*.txt .
+
+########################
+# INSTALL APPLICATIONS #
+########################
+RUN micromamba install --yes -c conda-forge --file requirements.txt && \
+    micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    micromamba clean --all --yes && \
+    rm -Rf ~/.cache/pip && \
+    cd ${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q && \
+    cd ${TETHYS_HOME}/apps/gwdm && tethys install -w -N -q
+
+
 COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
 COPY salt/ /srv/salt/
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
-RUN rm -Rf ~/.cache/pip && \
-    micromamba install --yes -c conda-forge numpy==1.26.4 && \
-    micromamba clean --all --yes
 
 EXPOSE 80
 CMD bash -c "salt-call --local state.apply -l info | tee /var/log/salt.log && bash run.sh"

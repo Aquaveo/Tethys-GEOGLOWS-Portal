@@ -29,7 +29,7 @@
 {% set POSTGIS_SERVICE_NAME = salt['environ.get']('POSTGIS_SERVICE_NAME') %}
 {% set GS_SERVICE_NAME = salt['environ.get']('GS_SERVICE_NAME') %}
 
-{% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/workspaces/app_workspaces/hydrosos/streamflow/vpu_122' %}
+{% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/workspaces/app_workspace/hydrosos/streamflow/vpu_122' %}
 {% set DATA_FILE_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/combined_all_data_122.nc' %}
 
 
@@ -64,16 +64,10 @@ VerifyFile:
     - require:
       - file: EnsureDirectoryExists
 
-# DownloadFile: 
-#     cmd.run:
-#         - name: wget -O {{ DATA_FILE_DESTINATION }}/combined_all_data_122.nc {{ DATA_FILE_URL }}
-#         - shell: /bin/bash
-#         - require:
-#             - file: {{ DATA_FILE_DESTINATION }}
 
 Initiate_Geoserver:
     cmd.run: 
-        - name: "tethys manage shell < {{ APPLICATION_PATH }}/init_geoserver.py"
+        - name: "cd {{ APPLICATION_PATH }} && tethys manage shell < init_geoserver.py"
         - shell: /bin/bash
         - cwd: {{ APPLICATION_PATH }}
         - stream: True
@@ -82,7 +76,7 @@ Initiate_Geoserver:
 
 Initiate_River_Tables:
     cmd.run: 
-        - name: "tethys manage shell < {{ APPLICATION_PATH }}/init_database.py"
+        - name: "cd {{ APPLICATION_PATH }} &&  tethys manage shell < init_database.py"
         - shell: /bin/bash
         - cwd: {{ APPLICATION_PATH }}
         - stream: True

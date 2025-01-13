@@ -20,13 +20,6 @@
 {% set DATA_FOLDER_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/thredds/ggst' %}
 
 
-# GGST_tHREDDS_Download_Data: 
-#     cmd.run:
-#         - name: wget -O {{ GGST_CS_THREDDS_DIRECTORY }} {{ DATA_FOLDER_URL }}
-#         - shell: /bin/bash
-#         - require:
-#             - file: {{ GGST_CS_THREDDS_DIRECTORY }}
-
 Set_GGST_Settings:
   cmd.run:
     - name: > 
