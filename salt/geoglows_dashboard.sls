@@ -85,21 +85,15 @@ Geoglows_Dashboard_Flag_Complete:
     - name: touch {{ TETHYS_PERSIST }}/geoglows_dashboard_complete
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/geoglows_dashboard_complete" ];" 
-    - require:
-      - cmd: geoglows_dashboard_complete
 
 Init_Db_Geoglows_Dashboard_Flag_Complete:
   cmd.run:
     - name: touch {{ TETHYS_PERSIST }}/init_river_tables_complete
     - shell: /bin/bash
-    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_river_tables_complete" ];" 
-    - require:
-      - cmd: init_river_tables_complete
+    - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_river_tables_complete" ];"
 
 Init_GeoServer_SetUp_Geoglows_Dashboard_Flag_Complete:
   cmd.run:
     - name: touch {{ TETHYS_PERSIST }}/init_geoserver_complete
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];" 
-    - require:
-      - cmd: init_geoserver_complete
