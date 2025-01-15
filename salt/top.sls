@@ -7,3 +7,4 @@ base:
     - ggst
     - gwdm
     - post_app
+    - link_combined_data

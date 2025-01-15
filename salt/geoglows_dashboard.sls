@@ -30,7 +30,6 @@
 {% set GS_SERVICE_NAME = salt['environ.get']('GS_SERVICE_NAME') %}
 
 {% set DATA_FILE_DESTINATION = APPLICATION_PATH + '/workspaces/app_workspace/hydrosos/streamflow/vpu_122' %}
-{% set DATA_FILE_URL = 'https://geoglows-dashboard-data.s3.us-east-2.amazonaws.com/combined_all_data_122.nc' %}
 
 
 
@@ -52,17 +51,6 @@ Geoglows_Dashboard_Link_Spatial__Dataset_Service:
         - shell: /bin/bash
         - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/geoglows_dashboard_complete" ];"
 
-EnsureDirectoryExists:
-  file.directory:
-    - name: {{ DATA_FILE_DESTINATION }}
-    - mode: 755
-    - makedirs: True
-
-VerifyFile:
-  cmd.run:
-    - name: ls -la {{ DATA_FILE_DESTINATION }}
-    - require:
-      - file: EnsureDirectoryExists
 
 Initiate_Geoserver:
     cmd.run: 
@@ -71,6 +59,14 @@ Initiate_Geoserver:
         - cwd: {{ APPLICATION_PATH }}
         - stream: True
         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];"
+
+# Link_all_Data_File:
+#     cmd.run: 
+#         - name: "ls -s {{ TETHYS_HOME }}/combined_all_data_122.nc {{ APPLICATION_PATH }}/workspaces/geoglows_dashboard/app_workspace/hydrosos/streamflow/vpu_122/combined_all_data_122.nc"
+#         - shell: /bin/bash
+#         - cwd: {{ APPLICATION_PATH }}
+#         - stream: True
+#         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/init_geoserver_complete" ];"
 
 # Initiate_River_Tables:
 #     cmd.run: 
