@@ -73,6 +73,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt && \
 COPY config/apps/post_setup_gwdm.py ${TETHYS_HOME}
 COPY salt/ /srv/salt/
 
+RUN chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
 EXPOSE 80
 CMD bash -c "salt-call --local state.apply -l info | tee /var/log/salt.log && bash run.sh"
