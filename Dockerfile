@@ -9,7 +9,6 @@ ENV THREDDS_SERVICE_NAME="primary_thredds"
 ENV POSTGRES_USER="postgres"
 ENV TETHYS_THREDDS_DATA_PATH="/var/lib/tethys_persist/data" 
 
-# ENV GEOGLOWS_DASHBOARD_PATH="/opt/conda/envs/tethys/lib/python3.10/site-packages/tethysapp/geoglows_dashboard"
 ENV GEOGLOWS_DASHBOARD_PATH="${TETHYS_HOME}/apps/tethysapp-geoglows_dashboard/tethysapp/geoglows_dashboard"
 
 ENV GWDM_WORKSPACE_NAME="gwdm"
