@@ -8,3 +8,4 @@ base:
     - gwdm
     - post_app
     - link_combined_data
+    - patch_dashboard_001
