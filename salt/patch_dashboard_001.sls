@@ -6,7 +6,7 @@
 PATCH_COUNTRIES_Database:
     cmd.run:
         - name: > 
-            PGPASSWORD={{ POSTGRES_PASSWORD }} psql -U postgres -h {{ TETHYS_DB_HOST }} -d geoglows_dashboard_primary_db -c "DROP DATABASE countries;"
+            PGPASSWORD={{ POSTGRES_PASSWORD }} psql -U postgres -h {{ TETHYS_DB_HOST }} -d geoglows_dashboard_primary_db -c "DROP TABLE countries;"
         - shell: /bin/bash
         - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/patch_001_geoglows_dashboard_complete" ];"
 
