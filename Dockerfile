@@ -1,4 +1,4 @@
-FROM tethysplatform/tethys-core:dev-py3.10-dj3.2 as base
+FROM tethysplatform/tethys-core:dev-py3.11-dj3.2 as base
 
 
 ENV TETHYS_DOMAIN="localhost"

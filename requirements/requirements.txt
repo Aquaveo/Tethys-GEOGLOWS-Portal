@@ -1,7 +1,7 @@
 oauth2client
 earthengine-api
 s3fs==2024.3.1
-geoglows
+geoglows>=1.8.1
 xarray
 geopandas
 openpyxl
