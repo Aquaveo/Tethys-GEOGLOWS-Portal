@@ -3,7 +3,7 @@ name: build_push_deploy_prod_image
 on:
   push:
     tags:
-      - '*'
+      - 'main'
 env:
   DOCKER_HUB_ORG: aquaveollc
   DOCKER_REPO: geoglows_portal
