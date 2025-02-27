@@ -24,3 +24,4 @@ sphinxcontrib-napoleon
 geoserver-rest
 gstools==1.5.1
 numpy==1.26.4
+plotly<6
