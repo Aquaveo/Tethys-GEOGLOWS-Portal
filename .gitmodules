@@ -9,4 +9,4 @@
 [submodule "tethysapp-geoglows_dashboard"]
 	path = apps/tethysapp-geoglows_dashboard
 	url = https://github.com/Aquaveo/tethysapp-geoglows_dashboard.git
-	branch = bugfix/central-america-hydrosos
+	branch = main
