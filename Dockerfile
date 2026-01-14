@@ -94,7 +94,6 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 RUN rm -Rf ~/.cache/pip && \
     micromamba clean --all --yes && \
     mkdir -p -m 777 ${TETHYS_PERSIST}/data/tethysdash \
-    && cd ${TETHYS_HOME}/ext/tethysext-default_theme \
     && pip install --no-cache-dir --quiet . \
     && chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
