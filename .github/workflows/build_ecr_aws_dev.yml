@@ -2,7 +2,7 @@
   on:
     push:
       branches:
-        - fix-for-geoglows-version
+        - '*'
   jobs:
     Build:
       name: Build
