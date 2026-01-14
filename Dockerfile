@@ -87,7 +87,7 @@ FROM tethysplatform/tethys-core:dev-py3.11-dj4.2 as build
 
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 COPY salt/ /srv/salt/
-
+COPY config/thredds/setup-thredds-config.sh ${TETHYS_HOME}
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 

@@ -33,6 +33,7 @@ Set_GGST_Settings:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "${TETHYS_PERSIST}/ggst_complete" ];"
 
+
 Flag_Tethys_GGST_Setup_Complete:
   cmd.run:
     - name: touch {{ TETHYS_PERSIST }}/ggst_complete
