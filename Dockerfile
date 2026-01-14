@@ -52,7 +52,7 @@ ENV PATH=${NODE_VERSION_DIR}/bin:$PATH
 ENV NPM=${NODE_VERSION_DIR}/bin/npm
 
 COPY apps ${TETHYS_HOME}/apps
-COPY plugins ${TETHYS_HOME}
+COPY plugins/ ${TETHYS_HOME}/apps/
 COPY requirements/*.txt .
 COPY images/firo_dash_default_dashboard.png ${TETHYS_HOME}/apps/tethysdash/tethysapp/tethysdash/default_dashboard.png
 COPY images/firo_dash_logo.png ${TETHYS_HOME}/apps/tethysdash/tethysapp/tethysdash/public/images/tethys_dash.png
@@ -77,7 +77,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt \
     && sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG} \
     && sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} \
     && cd ${TETHYS_HOME}/apps/tethysdash && npm install && npm run build && tethys install -w -N -q \
-    && cd ${TETHYS_HOME}/plugins/geoglows \
+    && cd ${TETHYS_HOME}/apps/plugins/geoglows \
     && pip install --no-cache-dir --quiet . \
     && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q
 
