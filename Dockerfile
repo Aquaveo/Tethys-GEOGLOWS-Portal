@@ -93,9 +93,8 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 RUN rm -Rf ~/.cache/pip && \
     micromamba clean --all --yes && \
-    mkdir -p -m 777 ${TETHYS_PERSIST}/data/tethysdash \
-    && pip install --no-cache-dir --quiet . \
-    && chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
+    mkdir -p -m 777 ${TETHYS_PERSIST}/data/tethysdash && \
+    chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
 
 EXPOSE 80
 WORKDIR ${TETHYS_HOME}
