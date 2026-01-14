@@ -14,15 +14,13 @@ LOCAL_BASE_DIR="$3"
 # Directories for configuration files
 CONF_DIR="$LOCAL_BASE_DIR/conf"
 PUBLIC_DATA_DIR="$LOCAL_BASE_DIR/data"
-THREDDS_LOGS_DIR="$LOCAL_BASE_DIR/logs/thredds"
-TOMCAT_LOGS_DIR="$LOCAL_BASE_DIR/logs/tomcat"
+
 
 # Create necessary directories
 echo "Creating directories..."
 mkdir -p "$CONF_DIR"
 mkdir -p "$PUBLIC_DATA_DIR"
-mkdir -p "$THREDDS_LOGS_DIR"
-mkdir -p "$TOMCAT_LOGS_DIR"
+
 
 # Download configuration files from S3
 echo "Downloading configuration files from S3..."

@@ -17,12 +17,7 @@ geojson
 simplejson
 pandarallel
 siphon
-matplotlib
-sphinx_rtd_theme
-sphinx
-sphinxcontrib-napoleon
 geoserver-rest
-gstools==1.5.1
 numpy==1.26.4
 plotly<6
 djangorestframework
