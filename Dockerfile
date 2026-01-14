@@ -77,7 +77,7 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt \
     && sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG} \
     && sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} \
     && cd ${TETHYS_HOME}/apps/tethysdash && npm install && npm run build && tethys install -w -N -q \
-    && cd ${TETHYS_HOME}/apps/plugins/geoglows \
+    && cd ${TETHYS_HOME}/apps/geoglows \
     && pip install --no-cache-dir --quiet . \
     && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q
 
