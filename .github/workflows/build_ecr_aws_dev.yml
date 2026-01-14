@@ -3,6 +3,9 @@
     push:
       branches:
         - '*'
+  permissions:
+    id-token: write
+    contents: read        
   jobs:
     Build:
       name: Build
