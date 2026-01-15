@@ -70,7 +70,6 @@ RUN mkdir -p ${NVM_DIR} \
 # INSTALL APPLICATIONS #
 ########################
 RUN micromamba install --yes -c conda-forge --file requirements.txt \
-    && micromamba install --yes -c conda-forge numpy==1.26.4 \
     && mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} \
     && sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG} \
     && sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} \
@@ -80,8 +79,9 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt \
     && cd ${TETHYS_HOME}/apps/geoglows \
     && pip install --no-cache-dir --quiet . \
     && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q \
-    && pip install djangorestframework-simplejwt
-
+    && pip install djangorestframework-simplejwt \
+    && micromamba install --yes -c conda-forge numpy==1.26.4
+    
 FROM tethysplatform/tethys-core:dev-py3.11-dj4.2 as build
 
 COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}

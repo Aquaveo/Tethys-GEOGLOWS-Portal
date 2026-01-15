@@ -1,7 +1,6 @@
 {% set TETHYS_PERSIST = salt['environ.get']('TETHYS_PERSIST') %}
 {% set TETHYS_HOME = salt['environ.get']('TETHYS_HOME') %}
-{% set POSTGIS_SERVICE_NAME = 'tethys_postgis' %}
-
+{% set POSTGIS_SERVICE_NAME = salt['environ.get']('POSTGIS_SERVICE_NAME') %}
 Link_PostGIS_To_TethysDash:
   cmd.run:
     - name: "tethys link persistent:{{ POSTGIS_SERVICE_NAME }} tethysdash:ps_database:primary_db"
