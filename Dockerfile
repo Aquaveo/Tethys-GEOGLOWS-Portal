@@ -79,9 +79,8 @@ RUN micromamba install --yes -c conda-forge --file requirements.txt \
     && cd ${TETHYS_HOME}/apps/tethysdash && npm install && npm run build && tethys install -w -N -q \
     && cd ${TETHYS_HOME}/apps/geoglows \
     && pip install --no-cache-dir --quiet . \
-    && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q
-
-
+    && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q \
+    && pip install djangorestframework-simplejwt
 
 FROM tethysplatform/tethys-core:dev-py3.11-dj4.2 as build
 
