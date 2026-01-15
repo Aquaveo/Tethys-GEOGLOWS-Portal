@@ -47,12 +47,6 @@ Create_THREDDS_Spatial_Dataset_Service:
     - shell: /bin/bash
     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_services_complete" ];"
 
-# SetUp_Config_Thredds:
-#   cmd.run:
-#     - name: "{{ TETHYS_HOME }}/setup-thredds-config.sh"
-#     - shell: /bin/bash
-#     - unless: /bin/bash -c "[ -f "{{ TETHYS_PERSIST }}/tethys_services_complete" ];"
-
 Flag_Tethys_Services_Setup_Complete:
   cmd.run:
     - name: touch {{ TETHYS_PERSIST }}/tethys_services_complete
