@@ -90,7 +90,8 @@ COPY config/thredds/setup-thredds-config.sh ${TETHYS_HOME}
 # Activate tethys conda environment during build
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-RUN rm -Rf ~/.cache/pip && \
+RUN micromamba install --yes -c conda-forge numpy==1.26.4 && \
+    rm -Rf ~/.cache/pip && \
     micromamba clean --all --yes && \
     mkdir -p -m 777 ${TETHYS_PERSIST}/data/tethysdash && \
     chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
