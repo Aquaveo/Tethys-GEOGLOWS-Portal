@@ -1,0 +1,6 @@
+# Local environment file (copy of .env.example with real values/secrets)
+.env
+
+# CloudFormation per-org parameter files - real values live locally, only *.example.json is committed
+aws/cloudformation/parameters/*.json
+!aws/cloudformation/parameters/*.example.json

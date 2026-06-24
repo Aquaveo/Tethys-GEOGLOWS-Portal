@@ -1,0 +1,77 @@
+[project]
+name = "tethys-docker-workshop"
+version = "0.1.0"
+description = "Production-style Docker Compose scaffold for Tethys Platform workshops"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    # --- Tethys platform / Django ---
+    "django>=4.2,<6",
+    "channels",
+    "channels-redis",
+    "django-bootstrap5",
+    "django-model-utils",
+    "django-guardian",
+    "social-auth-app-django<5.5",
+    "django-termsandconditions",
+    "django-cookie-consent",
+    "django-json-widget",
+    "djangorestframework",
+    "djangorestframework-simplejwt",
+
+    # --- web / server ---
+    "uvicorn[standard]",
+    "tornado>=6.5,<7",
+    "requests>=2.32.4,<3",
+    "urllib3<2",
+
+    # --- database ---
+    "psycopg2-binary",            # was psycopg2 (source) in requirements.txt; binary avoids a build step
+    "sqlalchemy==1.*",
+
+    # --- security / build / config ---
+    "pyopenssl>=24.0.0",
+    "cryptography>=46.0.5",
+    "bcrypt",
+    "setuptools_scm",
+    "pip",
+    "pyyaml",
+    "jinja2",
+
+    # --- static files storage (S3 via django-storages) ---
+    "django-storages",
+    "boto3",
+
+    # --- scientific / geo stack (ggst + geoglows) ---
+    # numpy/scipy are PINNED to the numpy 1.x ABI: scipy 1.12, numba, and the geoglows stack are
+    # NOT compatible with numpy>=2. Pure-pip via uv, so there is no conda/pip numpy conflict like the
+    # old conda image had -- the resolver installs one consistent numpy-1.x set.
+    "numpy==1.26.4",
+    "scipy==1.12.0",
+    "pandas>=2.2,<3",             # pin <3: apps target pandas 2.x; uv otherwise pulls pandas 3.0
+    "pytz",                       # geoglows imports pytz directly (pandas 3.x no longer provides it)
+    "geopandas",
+    "pyogrio",
+    "xarray",
+    "rioxarray",
+    "netCDF4",                    # xarray NetCDF backend (ggst / geoglows / THREDDS data)
+    "siphon",
+    "geoglows>=1.8.1",
+    "geoserver-rest",
+    "s3fs==2024.3.1",
+    "earthengine-api",
+    "oauth2client",
+    "pandarallel",
+    "plotly<6",
+    "bokeh",
+    "openpyxl",
+    "geojson",
+    "simplejson",
+    "pyshp",
+    "area",
+    "utm",
+]
+
+[dependency-groups]
+dev = [
+  "ruff",
+]

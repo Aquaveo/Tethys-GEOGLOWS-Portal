@@ -1,102 +1,154 @@
-FROM tethysplatform/tethys-core:dev-py3.11-dj4.2 as base
+# syntax=docker/dockerfile:1
+#
+# Multi-stage build:
+#   base    - shared ENV only (inherited by builder AND runtime -> no duplication)
+#   builder - toolchain (uv/git/gcc) + Python venv + Tethys + apps  (discarded)
+#   runtime - slim image: just the venv + interpreter + runtime libs
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
+###############################################################################
+# base - shared environment (both stages FROM this)
+###############################################################################
+FROM debian:trixie-slim AS base
+
+# Paths + venv layout (mimics the conda layout Tethys expects).
+# All Tethys state lives under /home/tethys (the service user's home) so a non-root
+# user owns it WITHOUT chowning system dirs -- see `useradd` in the runtime stage.
+# (TETHYS_MANAGE was dropped: it pointed at a manage.py under TETHYS_HOME that never
+#  existed -- the real one ships inside the venv -- and nothing reads it.)
+ENV HOME="/home/tethys" \
+    TETHYS_HOME="/home/tethys/portal" \
+    TETHYS_LOG="/home/tethys/log" \
+    TETHYS_PERSIST="/home/tethys/persist" \
+    TETHYS_APPS_ROOT="/home/tethys/apps" \
+    BASH_PROFILE=".bashrc" \
+    CONDA_HOME="/opt/conda" \
+    CONDA_ENV_NAME="tethys" \
+    ENV_NAME="tethys" \
+    VIRTUAL_ENV="/opt/conda/envs/tethys" \
+    CONDA_PREFIX="/opt/conda/envs/tethys" \
+    LD_LIBRARY_PATH="/opt/conda/envs/tethys/lib" \
+    PATH="/opt/conda/envs/tethys/bin:${PATH}"
+
+# Static / media / workspace roots (reference TETHYS_PERSIST from the block above).
+# These are consumed by the `mkdir` in the runtime stage; the Django-facing
+# STATIC_URL/MEDIA_URL/STATIC_ROOT now live declaratively in portal_config.yml.
+ENV STATIC_ROOT="${TETHYS_PERSIST}/static" \
+    WORKSPACE_ROOT="${TETHYS_PERSIST}/workspaces" \
+    MEDIA_ROOT="${TETHYS_PERSIST}/media"
+
+ENV TETHYS_PORT=8000 \
+    TETHYS_DB_ENGINE="django.db.backends.postgresql" \
+    TETHYS_DB_NAME="tethys_platform" \
+    TETHYS_DB_USERNAME="tethys_default" \
+    TETHYS_DB_HOST="db" \
+    TETHYS_DB_PORT=5432 \
+    TETHYS_DB_SUPERUSER="tethys_super" \
+    PORTAL_SUPERUSER_NAME="" \
+    PORTAL_SUPERUSER_EMAIL="" \
+    ASGI_PROCESSES=1
+
+###############################################################################
+# builder - everything heavy; nothing here ends up in the final image
+###############################################################################
+FROM base AS builder
+
+# uv binary (build-time only; the runtime never needs it)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# build deps: git (clone + pip git+), gcc + libpq-dev (compile psycopg2 if no wheel),
+# ca-certificates (HTTPS for git/pip), curl+gnupg (NodeSource), nodejs (build the tethysdash
+# React frontend). Node is build-time only -- it never ends up in the runtime image.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates git gcc libpq-dev curl gnupg \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV UV_PYTHON_PREFERENCE=only-managed \
+    UV_PYTHON_INSTALL_DIR=/opt/python \
+    UV_COMPILE_BYTECODE=1
+
+WORKDIR ${TETHYS_HOME}
+COPY pyproject.toml .
+
+# Python interpreter + venv + Tethys platform + extra deps
+RUN uv python install 3.12 \
+  && uv venv "${VIRTUAL_ENV}" --python 3.12 \
+  && uv pip install --no-cache "tethys-platform @ git+https://github.com/tethysplatform/tethys.git" \
+  && uv pip install --no-cache -r pyproject.toml \
+  && tethys gen portal_config
+
+# tethysdash React frontend build config (build-time only). The prod react env controls the
+# app's API root URL / loader delay etc. Override via --build-arg as needed.
 ARG TETHYS_PORTAL_HOST=""
 ARG TETHYS_APP_ROOT_URL="/apps/tethysdash/"
 ARG TETHYS_LOADER_DELAY="500"
 ARG TETHYS_DEBUG_MODE="false"
+ENV DEV_REACT_CONFIG="${TETHYS_APPS_ROOT}/tethysdash/reactapp/config/development.env" \
+    PROD_REACT_CONFIG="${TETHYS_APPS_ROOT}/tethysdash/reactapp/config/production.env"
 
-ENV TETHYS_DOMAIN="localhost"
-ENV TETHYS_THREDDS_PROTOCOL="http"
-ENV POSTGIS_SERVICE_NAME="primary_postgis"
-ENV GS_SERVICE_NAME="primary_geoserver"
-ENV THREDDS_SERVICE_NAME="primary_thredds"
-ENV POSTGRES_USER="postgres"
-ENV TETHYS_THREDDS_DATA_PATH="/var/lib/thredds_data" 
+# Apps - tethysdash: clone, build the React frontend (npm), THEN pip-install the app (so the built
+# static is packaged). Mirrors the legacy salt Dockerfile's react config + build steps.
+RUN git clone https://github.com/tethysplatform/tethysapp-tethys_dash.git \
+      "${TETHYS_APPS_ROOT}/tethysdash" \
+  && mv "${DEV_REACT_CONFIG}" "${PROD_REACT_CONFIG}" \
+  && sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g"   "${PROD_REACT_CONFIG}" \
+  && sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" "${PROD_REACT_CONFIG}" \
+  && sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" "${PROD_REACT_CONFIG}" \
+  && sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" "${PROD_REACT_CONFIG}" \
+  && ( cd "${TETHYS_APPS_ROOT}/tethysdash" && npm install && npm run build ) \
+  && uv pip install --no-cache "${TETHYS_APPS_ROOT}/tethysdash" \
+  && uv pip install --no-cache "git+https://github.com/FIRO-Tethys/tethysdash_examples"
 
-ENV GGST_CS_THREDDS_DIRECTORY="/var/lib/thredds_data"
-ENV GGST_CS_THREDDS_CATALOG_SUBPATH="/thredds/catalog/data/thredds_data/catalog.xml"
-ENV GGST_CS_GLOBAL_OUTPUT_DIRECTORY="/var/lib/thredds_data"
-ENV GGST_CS_CONDA_PYTHON_PATH="/opt/conda/envs/tethys/bin/python"
-ENV GGST_CS_EARTHDATA_USERNAME=""
-ENV GGST_CS_EARTHDATA_PASS=""  
+# world-readable so it works even if the image is ever run as non-root
+RUN chmod -R a+rX /opt/python /opt/conda
+# tethysdash writes into its OWN package dir at runtime (public/{images,data} via
+# collect_plugin_static.py, and resources/), but the a+rX above makes site-packages read-only for the
+# non-root (uid 1000) runtime user. Make tethysdash's package dir writable so those steps succeed.
+RUN chmod -R a+rwX /opt/conda/envs/tethys/lib/python3.12/site-packages/tethysapp/tethysdash
 
-ENV TETHYS_GS_PORT="8181"
-ENV TETHYS_GS_PORT_PUB="8181"
-ENV TETHYS_GS_PASSWORD="geoserver"
-ENV TETHYS_GS_USERNAME="admin"
-ENV TETHYS_GS_PROTOCOL="http"
-ENV TETHYS_GS_PROTOCOL_PUB="http"
-ENV TETHYS_GS_HOST=""
-ENV TETHYS_GS_HOST_PUB=""
+###############################################################################
+# runtime - slim final image (no uv, no git, no gcc, no build caches)
+###############################################################################
+FROM base AS runtime
 
-ENV THREDDS_TDS_USERNAME="admin"
-ENV THREDDS_TDS_PASSWORD="tdm_pass"
-ENV THREDDS_TDS_CATALOG="/thredds/catalog/data/catalog.xml"
-ENV THREDDS_TDS_PRIVATE_PROTOCOL="http"
-ENV THREDDS_TDS_PRIVATE_PORT="8080"
-ENV THREDDS_TDS_PUBLIC_PROTOCOL="http"
-ENV THREDDS_TDS_PUBLIC_PORT="8080"
-ENV THREDDS_TDS_PUBLIC_HOST=""
-ENV THREDDS_TDS_PRIVATE_HOST=""
+# runtime libs only: certs (outbound HTTPS), curl (Compose healthcheck),
+# postgresql-client (psql client + libpq for psycopg2), libexpat1 (rasterio/rioxarray dlopen it)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl postgresql-client libexpat1 \
+  && rm -rf /var/lib/apt/lists/*
 
+# Non-root service user. --create-home makes /home/tethys owned by uid 1000, which is
+# what lets every Tethys dir below it be created AS the user (no chown anywhere). The
+# passwd entry also keeps getpwuid()/expanduser("~") happy for the venv + Django.
+RUN useradd --uid 1000 --create-home --home-dir /home/tethys --shell /bin/bash tethys
 
-ENV TETHYS_DASH_APP_SRC_ROOT=${TETHYS_HOME}/apps/tethysdash
-ENV DEV_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/development.env"
-ENV PROD_REACT_CONFIG="${TETHYS_DASH_APP_SRC_ROOT}/reactapp/config/production.env"
-ENV NVM_DIR=/usr/local/nvm
-ENV NODE_VERSION=20.12.2
-ENV NODE_VERSION_DIR=${NVM_DIR}/versions/node/v${NODE_VERSION}
-ENV NODE_PATH=${NODE_VERSION_DIR}/lib/node_modules
-ENV PATH=${NODE_VERSION_DIR}/bin:$PATH
-ENV NPM=${NODE_VERSION_DIR}/bin/npm
+# The interpreter AND the venv -- copy BOTH at the SAME paths: the venv's pyvenv.cfg
+# hardcodes /opt/python, so the venv is dead without it. (Already world-readable via
+# `chmod a+rX` in the builder, so uid 1000 can execute it read-only.)
+COPY --from=builder /opt/python /opt/python
+COPY --from=builder /opt/conda  /opt/conda
 
-COPY apps ${TETHYS_HOME}/apps
-COPY plugins/ ${TETHYS_HOME}/apps/
-COPY requirements/*.txt .
-COPY images/firo_dash_default_dashboard.png ${TETHYS_HOME}/apps/tethysdash/tethysapp/tethysdash/default_dashboard.png
-COPY images/firo_dash_logo.png ${TETHYS_HOME}/apps/tethysdash/tethysapp/tethysdash/public/images/tethys_dash.png
+# venv-activating entrypoint shim (root-owned, world-executable) + the scripts
+RUN printf '#!/bin/bash\nexport VIRTUAL_ENV=%s\nexport PATH="${VIRTUAL_ENV}/bin:${PATH}"\nexport CONDA_PREFIX="${VIRTUAL_ENV}"\nexport LD_LIBRARY_PATH="${VIRTUAL_ENV}/lib:${LD_LIBRARY_PATH}"\nexec "$@"\n' "${VIRTUAL_ENV}" > /usr/local/bin/_entrypoint.sh \
+  && chmod +x /usr/local/bin/_entrypoint.sh
+COPY --chmod=0755 scripts/*.sh /usr/local/bin/
 
-RUN mkdir -p ${NVM_DIR} \
-  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | /bin/bash \
-  && . ${NVM_DIR}/nvm.sh \
-  && nvm install ${NODE_VERSION} \
-  && nvm alias default ${NODE_VERSION} \
-  && nvm use default
+USER 1000:1000
 
+# Everything lives under /home/tethys (owned by 1000), so these are created AS the
+# user -- zero chown. (TETHYS_PERSIST is created implicitly by its subdirs.)
+RUN mkdir -p "${TETHYS_HOME}/keys" "${TETHYS_HOME}/tethys" \
+      "${STATIC_ROOT}" "${MEDIA_ROOT}" "${WORKSPACE_ROOT}" \
+      "${TETHYS_APPS_ROOT}" "${TETHYS_LOG}"
 
+# Baked default portal_config.yml (the bare `tethys gen` output; overwritten at runtime)
+COPY --chown=1000:1000 --from=builder ${TETHYS_HOME}/portal_config.yml ${TETHYS_HOME}/portal_config.yml
+# The declarative portal config (DATABASES, STORAGES, CHANNEL_LAYERS, ...). portal-config.sh copies
+# this to ${TETHYS_HOME}/portal_config.yml and injects secrets at startup (PORTAL_CONFIG_SRC default
+# is /config/portal_config.yml). Baked here so ECS needs no config mount.
+COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
 
-########################
-# INSTALL APPLICATIONS #
-########################
-RUN micromamba install --yes -c conda-forge --file requirements.txt \
-    && mv ${DEV_REACT_CONFIG} ${PROD_REACT_CONFIG} \
-    && sed -i "s#TETHYS_DEBUG_MODE.*#TETHYS_DEBUG_MODE = ${TETHYS_DEBUG_MODE}#g" ${PROD_REACT_CONFIG} \
-    && sed -i "s#TETHYS_LOADER_DELAY.*#TETHYS_LOADER_DELAY = ${TETHYS_LOADER_DELAY}#g" ${PROD_REACT_CONFIG} \
-    && sed -i "s#TETHYS_PORTAL_HOST.*#TETHYS_PORTAL_HOST = ${TETHYS_PORTAL_HOST}#g" ${PROD_REACT_CONFIG} \
-    && sed -i "s#TETHYS_APP_ROOT_URL.*#TETHYS_APP_ROOT_URL = ${TETHYS_APP_ROOT_URL}#g" ${PROD_REACT_CONFIG} \
-    && cd ${TETHYS_HOME}/apps/tethysdash && npm install && npm run build && tethys install -w -N -q \
-    && cd ${TETHYS_HOME}/apps/geoglows \
-    && pip install --no-cache-dir --quiet . \
-    && cd ${TETHYS_HOME}/apps/ggst && tethys install -w -N -q \
-    && pip install djangorestframework-simplejwt \
-    && micromamba install --yes -c conda-forge numpy==1.26.4
-    
-FROM tethysplatform/tethys-core:dev-py3.11-dj4.2 as build
-
-COPY --chown=www:www --from=base ${CONDA_HOME}/envs/${CONDA_ENV_NAME} ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
-COPY salt/ /srv/salt/
-COPY config/thredds/setup-thredds-config.sh ${TETHYS_HOME}
-# Activate tethys conda environment during build
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
-RUN micromamba install --yes -c conda-forge numpy==1.26.4 && \
-    rm -Rf ~/.cache/pip && \
-    micromamba clean --all --yes && \
-    mkdir -p -m 777 ${TETHYS_PERSIST}/data/tethysdash && \
-    chmod -R 777 ${CONDA_HOME}/envs/${CONDA_ENV_NAME}
-
-EXPOSE 80
+VOLUME ["${TETHYS_PERSIST}", "${TETHYS_HOME}/keys"]
 WORKDIR ${TETHYS_HOME}
-CMD bash -c "salt-call --local state.apply -l info | tee /var/log/salt.log && bash run.sh"
-
+CMD ["/usr/local/bin/start-uvicorn.sh"]

@@ -1,0 +1,126 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: tethys-postgres
+    environment:
+      # Bootstrap superuser the postgis image creates first.
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      # Consumed by /docker-entrypoint-initdb.d/10-create-tethys-db.sh to create
+      # the Tethys roles + database on first boot (the CNPG-bootstrap equivalent).
+      TETHYS_DB_NAME: ${TETHYS_DB_NAME:-tethys_platform}
+      TETHYS_DB_USERNAME: ${TETHYS_DB_USERNAME:-tethys_default}
+      TETHYS_DB_PASSWORD: ${TETHYS_DB_PASSWORD:-pass}
+      TETHYS_DB_SUPERUSER: ${TETHYS_DB_SUPERUSER:-tethys_super}
+      TETHYS_DB_SUPERUSER_PASS: ${TETHYS_DB_SUPERUSER_PASS:-pass}
+      # Least-privilege role for app persistent stores (Option B): CREATEDB, non-super.
+      TETHYS_APP_DB_USERNAME: ${TETHYS_APP_DB_USERNAME:-tethys_app}
+      TETHYS_APP_DB_PASSWORD: ${TETHYS_APP_DB_PASSWORD:-pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Runs ONCE on first boot (empty data dir) -- creates roles + db.
+      - ./conf/postgres-initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TETHYS_DB_USERNAME:-tethys} -d ${TETHYS_DB_NAME:-tethys_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # Connection pooler -- the Compose equivalent of the k8s CNPG Pooler
+  # (k8s/base/15-cnpg-pooler.yaml): PgBouncer in transaction mode, bounding the
+  # server-side connections to Postgres. The web tier connects here; migrations/DDL
+  # bypass it and hit Postgres directly (transaction pooling breaks session-level DDL).
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: tethys-pgbouncer
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${TETHYS_DB_USERNAME:-tethys_default}
+      DB_PASSWORD: ${TETHYS_DB_PASSWORD:-pass}
+      DB_NAME: ${TETHYS_DB_NAME:-tethys_platform}
+      AUTH_TYPE: scram-sha-256       # Postgres 16 default password encryption
+      POOL_MODE: transaction 
+      MAX_CLIENT_CONN: "1000"        # client conns pgbouncer accepts
+      DEFAULT_POOL_SIZE: "25"        # server conns per (user,db)
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: tethys-valkey
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  tethys-init:
+    build:
+      context: .
+    container_name: tethys-init
+    env_file:
+      - .env
+    command: ["/usr/local/bin/init-tethys.sh"]
+    volumes:
+      - tethys_home:/home/tethys/portal
+      - tethys_persist:/home/tethys/persist
+      # Declarative portal settings, mounted like the k8s ConfigMap. portal-config.sh
+      # copies this into TETHYS_HOME and injects secrets; web reads it from the shared volume.
+      - ./conf/portal_config.yml:/config/portal_config.yml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    restart: "no"
+
+  tethys-web:
+    build:
+      context: .
+    command: ["/usr/local/bin/start-uvicorn.sh"]
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    volumes:
+      - tethys_home:/home/tethys/portal
+      - tethys_persist:/home/tethys/persist
+    depends_on:
+      tethys-init:
+        condition: service_completed_successfully
+      pgbouncer:                       # web talks to Postgres THROUGH the pooler
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+
+  nginx:
+    image: nginxinc/nginx-unprivileged:stable-alpine   # runs as uid 101, listens on 8080
+    container_name: tethys-nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./conf/tethys_nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - tethys_persist:/home/tethys/persist:ro
+    depends_on:
+      tethys-web:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  tethys_home:
+  tethys_persist:
+  valkey_data:
