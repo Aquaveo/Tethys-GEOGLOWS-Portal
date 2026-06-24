@@ -1,0 +1,5 @@
+[
+  "Org=acme",
+  "App=portal",
+  "BucketName=acme-portal-static"
+]

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Tethys portal - private S3 bucket + CloudFront (Origin Access Control) for the static files. The
+  bucket is PRIVATE (Block Public Access on); only this CloudFront distribution can read it (via OAC
+  + a scoped bucket policy). django-storages uploads collected static under a per-release prefix; the
+  portal emits CloudFront URLs (STATIC_CLOUDFRONT_DOMAIN).
+
+Parameters:
+  Org:
+    Type: String
+    Description: Organization short name (e.g. acme); used only for resource tags.
+  App:
+    Type: String
+    Default: portal
+  BucketName:
+    Type: String
+    Description: Globally-unique S3 bucket name (must match STATIC_S3_BUCKET in the portal env).
+  PriceClass:
+    Type: String
+    Default: PriceClass_100
+    AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
+    Description: CloudFront edge coverage (100 = NA/EU only, cheapest).
+
+Resources:
+  StaticBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      VersioningConfiguration: { Status: Enabled }
+      CorsConfiguration:                # browser may pull fonts/assets cross-origin from CloudFront
+        CorsRules:
+          - AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ["*"]
+            AllowedHeaders: ["*"]
+            MaxAge: 3600
+      Tags:
+        - { Key: project, Value: !Sub "${Org}-${App}" }
+        - { Key: purpose, Value: tethys-static }
+
+  OAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${BucketName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${Org}-${App} static (${BucketName})"
+        PriceClass: !Ref PriceClass
+        HttpVersion: http2and3
+        Origins:
+          - Id: s3origin
+            DomainName: !GetAtt StaticBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }   # OAC replaces the legacy OAI
+        DefaultCacheBehavior:
+          TargetOriginId: s3origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # AWS managed: CachingOptimized
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontReadViaOAC
+            Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${StaticBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution.Id}"
+
+Outputs:
+  BucketName:
+    Description: Set as STATIC_S3_BUCKET in the portal env.
+    Value: !Ref StaticBucket
+  CloudFrontDomain:
+    Description: Set as STATIC_CLOUDFRONT_DOMAIN in the portal env.
+    Value: !GetAtt Distribution.DomainName
+  DistributionId:
+    Value: !Ref Distribution
