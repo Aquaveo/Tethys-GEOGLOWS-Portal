@@ -148,6 +148,9 @@ COPY --chown=1000:1000 --from=builder ${TETHYS_HOME}/portal_config.yml ${TETHYS_
 # this to ${TETHYS_HOME}/portal_config.yml and injects secrets at startup (PORTAL_CONFIG_SRC default
 # is /config/portal_config.yml). Baked here so ECS needs no config mount.
 COPY --chown=1000:1000 conf/portal_config.yml /config/portal_config.yml
+# Custom S3 static backend (tolerates Tethys' leading-slash static paths). Dropped into the venv
+# site-packages root so it's importable as `portal_storage.PortalStaticS3Storage`.
+COPY --chown=1000:1000 conf/portal_storage.py /opt/conda/envs/tethys/lib/python3.12/site-packages/portal_storage.py
 
 VOLUME ["${TETHYS_PERSIST}", "${TETHYS_HOME}/keys"]
 WORKDIR ${TETHYS_HOME}

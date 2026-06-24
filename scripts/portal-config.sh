@@ -56,7 +56,7 @@ if [ -n "${STATIC_S3_BUCKET:-}" ]; then
   loc="${INIT_VERSION:-static}"
   s3_args=(
     --set STORAGES.default.BACKEND "django.core.files.storage.FileSystemStorage"
-    --set STORAGES.staticfiles.BACKEND "storages.backends.s3.S3Storage"
+    --set STORAGES.staticfiles.BACKEND "portal_storage.PortalStaticS3Storage"
     --set STORAGES.staticfiles.OPTIONS.bucket_name "$STATIC_S3_BUCKET"
     --set STORAGES.staticfiles.OPTIONS.region_name "${AWS_REGION:-us-east-1}"
     --set STORAGES.staticfiles.OPTIONS.location "$loc"
