@@ -113,6 +113,14 @@ Resources:
             CachedMethods: [GET, HEAD]
             Compress: true
             CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6      # AWS managed: CachingOptimized
+          # Media (user/app uploads) -> S3 under media/. Edge-cached (tethysdash uses UUID names).
+          - PathPattern: "/media/*"
+            TargetOriginId: s3origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6      # AWS managed: CachingOptimized
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy

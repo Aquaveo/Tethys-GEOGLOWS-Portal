@@ -112,19 +112,28 @@ tethys settings "${set_args[@]}"
 if [ -n "${STATIC_S3_BUCKET:-}" ]; then
   loc="static"
   s3_args=(
-    --set STORAGES.default.BACKEND "django.core.files.storage.FileSystemStorage"
+    # static files -> S3 under "static/" (collectstatic uploads here; CloudFront /static/* serves it)
     --set STORAGES.staticfiles.BACKEND "portal_storage.PortalStaticS3Storage"
     --set STORAGES.staticfiles.OPTIONS.bucket_name "$STATIC_S3_BUCKET"
     --set STORAGES.staticfiles.OPTIONS.region_name "${AWS_REGION:-us-east-1}"
     --set STORAGES.staticfiles.OPTIONS.location "$loc"
     --set STORAGES.staticfiles.OPTIONS.querystring_auth false
+    # media (user/app uploads) -> S3 under "media/" (durable; the portal is stateless, no local disk).
+    # CloudFront /media/* serves it. Same bucket, different prefix.
+    --set STORAGES.default.BACKEND "storages.backends.s3.S3Storage"
+    --set STORAGES.default.OPTIONS.bucket_name "$STATIC_S3_BUCKET"
+    --set STORAGES.default.OPTIONS.region_name "${AWS_REGION:-us-east-1}"
+    --set STORAGES.default.OPTIONS.location "media"
+    --set STORAGES.default.OPTIONS.querystring_auth false
   )
   if [ -n "${STATIC_CLOUDFRONT_DOMAIN:-}" ]; then
     s3_args+=( --set STORAGES.staticfiles.OPTIONS.custom_domain "$STATIC_CLOUDFRONT_DOMAIN" )
     s3_args+=( --set STATIC_URL "https://${STATIC_CLOUDFRONT_DOMAIN}/${loc}/" )
+    s3_args+=( --set STORAGES.default.OPTIONS.custom_domain "$STATIC_CLOUDFRONT_DOMAIN" )
+    s3_args+=( --set MEDIA_URL "https://${STATIC_CLOUDFRONT_DOMAIN}/media/" )
   fi
   tethys settings "${s3_args[@]}"
-  echo "S3 static configured: bucket=$STATIC_S3_BUCKET location=$loc domain=${STATIC_CLOUDFRONT_DOMAIN:-<none>}"
+  echo "S3 static+media configured: bucket=$STATIC_S3_BUCKET static=static/ media=media/ domain=${STATIC_CLOUDFRONT_DOMAIN:-<none>}"
 fi
 
 echo "Tethys portal config applied."
