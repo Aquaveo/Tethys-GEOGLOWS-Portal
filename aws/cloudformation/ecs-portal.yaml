@@ -110,6 +110,9 @@ Resources:
             - { Name: STATIC_S3_BUCKET, Value: !Ref StaticBucket }
             - { Name: STATIC_CLOUDFRONT_DOMAIN, Value: !Ref CloudFrontDomain }
             - { Name: POSTGIS_SERVICE_NAME, Value: primary_postgis }
+            - { Name: GEOGLOWS_CACHE_BACKEND, Value: s3 }
+            - { Name: GEOGLOWS_CACHE_BUCKET, Value: !Ref StaticBucket }
+            - { Name: GEOGLOWS_CACHE_PREFIX, Value: cache/geoglows }
             - { Name: PORTAL_SUPERUSER_NAME, Value: admin }
           Secrets:
             - { Name: TETHYS_DB_PASSWORD, ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Org}/${App}/db-password" }
@@ -154,6 +157,9 @@ Resources:
             - { Name: STATIC_S3_BUCKET, Value: !Ref StaticBucket }
             - { Name: STATIC_CLOUDFRONT_DOMAIN, Value: !Ref CloudFrontDomain }
             - { Name: POSTGIS_SERVICE_NAME, Value: primary_postgis }
+            - { Name: GEOGLOWS_CACHE_BACKEND, Value: s3 }
+            - { Name: GEOGLOWS_CACHE_BUCKET, Value: !Ref StaticBucket }
+            - { Name: GEOGLOWS_CACHE_PREFIX, Value: cache/geoglows }
           Secrets:
             - { Name: TETHYS_DB_PASSWORD, ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Org}/${App}/db-password" }
             - { Name: TETHYS_PS_CONNECTION, ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Org}/${App}/ps-connection" }

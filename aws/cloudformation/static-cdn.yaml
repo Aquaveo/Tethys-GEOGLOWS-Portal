@@ -49,6 +49,14 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
       VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          # Plot-data cache (geoglows plugin, GEOGLOWS_CACHE_PREFIX) is daily + regenerable; expire it.
+          - Id: expire-geoglows-cache
+            Status: Enabled
+            Prefix: cache/geoglows/
+            ExpirationInDays: 7
+            NoncurrentVersionExpirationInDays: 1
       CorsConfiguration:                # browser may pull fonts/assets cross-origin from CloudFront
         CorsRules:
           - AllowedMethods: [GET, HEAD]
