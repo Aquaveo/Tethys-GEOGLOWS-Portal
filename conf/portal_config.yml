@@ -13,10 +13,11 @@ name:
 apps: {}
 settings:
   DEBUG: false
+  # Baseline only. portal-config.sh appends, at startup: the hosts in PORTAL_ALLOWED_HOSTS (ALB DNS,
+  # public domain) and this task's own private IP (so the ALB health check's Host=<task-ip> passes).
   ALLOWED_HOSTS:
     - localhost
     - 127.0.0.1
-    - nginx
   CSRF_TRUSTED_ORIGINS:
     - http://localhost:8080
     - http://127.0.0.1:8080
@@ -48,7 +49,7 @@ settings:
   CHANNEL_LAYERS:
     default:
       # In-memory layer: no external Redis/valkey. Fine because websockets/cross-process channel
-      # messaging are not used here. (Not shared across tasks/processes — single task, low traffic.)
+      # messaging are not used here. (Not shared across tasks/processes - single task, low traffic.)
       BACKEND: channels.layers.InMemoryChannelLayer
   TETHYS_PORTAL_CONFIG:
     ENABLE_OPEN_PORTAL: true

@@ -9,5 +9,6 @@
   "DbUserName=tethys_default.<project_ref>",
   "InitVersion=<tag>",
   "StaticBucket=acme-portal-static",
-  "CloudFrontDomain=xxxxxxxxxxxxxx.cloudfront.net"
+  "CloudFrontDomain=xxxxxxxxxxxxxx.cloudfront.net",
+  "PortalAllowedHosts=<alb-dns-name>,<your-domain>"
 ]

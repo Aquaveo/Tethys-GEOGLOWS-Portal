@@ -65,6 +65,12 @@ Parameters:
   WebPort:
     Type: Number
     Default: 8000
+  PortalAllowedHosts:
+    Type: String
+    Default: ""
+    Description: >
+      Comma-separated extra Django ALLOWED_HOSTS (the ALB DNS name and your public domain). The
+      task's own private IP is auto-added at startup for the ALB health check, so no '*' is needed.
 
 Resources:
   TaskDefinition:
@@ -87,6 +93,7 @@ Resources:
             # Tethys' admin module runs a DB query at import/ready() time; under uvicorn's ASGI
             # startup that's an async context, which Django blocks. Allow it during setup.
             - { Name: DJANGO_ALLOW_ASYNC_UNSAFE, Value: "true" }
+            - { Name: PORTAL_ALLOWED_HOSTS, Value: !Ref PortalAllowedHosts }
             - { Name: TETHYS_DB_ENGINE, Value: django.db.backends.postgresql }
             - { Name: TETHYS_DB_NAME, Value: !Ref DbName }
             - { Name: TETHYS_DB_HOST, Value: !Ref DbHost }
@@ -130,6 +137,7 @@ Resources:
             # Tethys' admin module runs a DB query at import/ready() time; under uvicorn's ASGI
             # startup that's an async context, which Django blocks. Allow it during setup.
             - { Name: DJANGO_ALLOW_ASYNC_UNSAFE, Value: "true" }
+            - { Name: PORTAL_ALLOWED_HOSTS, Value: !Ref PortalAllowedHosts }
             - { Name: TETHYS_DB_ENGINE, Value: django.db.backends.postgresql }
             - { Name: TETHYS_DB_NAME, Value: !Ref DbName }
             - { Name: TETHYS_DB_HOST, Value: !Ref DbHost }

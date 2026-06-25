@@ -27,6 +27,62 @@ mkdir -p "$TETHYS_HOME"
 echo "Applying portal config from $PORTAL_CONFIG_SRC"
 cp "$PORTAL_CONFIG_SRC" "$TETHYS_HOME/portal_config.yml"
 
+# Merge ALLOWED_HOSTS: baseline (from the file) + PORTAL_ALLOWED_HOSTS env (ALB DNS, public domain)
+# + THIS task's own private IP, fetched from the ECS metadata endpoint. The ALB health check sends
+# the request with Host=<task-ip>, so the running task must allow its own IP (avoids ALLOWED_HOSTS=*).
+TASK_IP=""
+if [ -n "${ECS_CONTAINER_METADATA_URI_V4:-}" ]; then
+  TASK_IP="$(curl -s --max-time 3 "${ECS_CONTAINER_METADATA_URI_V4}/task" \
+    | python -c 'import sys,json
+try:
+    d=json.load(sys.stdin)
+    ips=[a for c in d.get("Containers",[]) for n in c.get("Networks",[]) for a in n.get("IPv4Addresses",[])]
+    print(ips[0] if ips else "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+fi
+PORTAL_ALLOWED_HOSTS="${PORTAL_ALLOWED_HOSTS:-}" TASK_IP="$TASK_IP" \
+  python - "$TETHYS_HOME/portal_config.yml" <<'PY'
+import os, re, sys, yaml
+path = sys.argv[1]
+with open(path) as f:
+    cfg = yaml.safe_load(f) or {}
+s = cfg.setdefault("settings", {})
+extra = [h.strip() for h in os.environ.get("PORTAL_ALLOWED_HOSTS", "").split(",") if h.strip()]
+
+# ALLOWED_HOSTS: baseline + PORTAL_ALLOWED_HOSTS (ALB DNS, CloudFront domain, public domain) + task IP
+hosts = list(s.get("ALLOWED_HOSTS") or [])
+for h in extra:
+    if h not in hosts:
+        hosts.append(h)
+ip = os.environ.get("TASK_IP", "").strip()
+if ip and ip not in hosts:
+    hosts.append(ip)
+s["ALLOWED_HOSTS"] = hosts
+
+# CSRF_TRUSTED_ORIGINS: https://<host> for each real domain (skip localhost + bare IPs). Required
+# for POST/login behind CloudFront (the Origin header is the public https domain, not the ALB).
+def is_ip(h):
+    return bool(re.match(r"^\d{1,3}(\.\d{1,3}){3}$", h))
+csrf = list(s.get("CSRF_TRUSTED_ORIGINS") or [])
+for h in extra:
+    if h in ("localhost", "127.0.0.1") or is_ip(h):
+        continue
+    origin = "https://" + h
+    if origin not in csrf:
+        csrf.append(origin)
+if csrf:
+    s["CSRF_TRUSTED_ORIGINS"] = csrf
+
+# Behind CloudFront -> ALB (HTTP): trust X-Forwarded-Proto so Django knows the request is HTTPS.
+s["SECURE_PROXY_SSL_HEADER"] = ["HTTP_X_FORWARDED_PROTO", "https"]
+
+with open(path, "w") as f:
+    yaml.safe_dump(cfg, f, default_flow_style=False, sort_keys=False)
+print("ALLOWED_HOSTS =", hosts)
+print("CSRF_TRUSTED_ORIGINS =", csrf)
+PY
+
 
 set_args=(
   --set SECRET_KEY "${TETHYS_SECRET_KEY:?TETHYS_SECRET_KEY is required (from tethys-secret)}"
@@ -50,10 +106,11 @@ fi
 tethys settings "${set_args[@]}"
 
 # S3 static via django-storages (only when configured -- no-op for the local/workshop path).
-# collectstatic (in publish-static.sh) uploads to S3; the web tier emits CloudFront URLs.
-# Per-release prefix = INIT_VERSION (the image tag) for immutable, atomic releases.
+# collectstatic (in publish-static.sh) uploads to S3 under the "static/" prefix; CloudFront serves
+# /static/* from this bucket. The prefix is FIXED to "static" (not INIT_VERSION) so it matches the
+# CloudFront "/static/*" cache behavior AND the tethysdash React bundle's hardcoded /static/ paths.
 if [ -n "${STATIC_S3_BUCKET:-}" ]; then
-  loc="${INIT_VERSION:-static}"
+  loc="static"
   s3_args=(
     --set STORAGES.default.BACKEND "django.core.files.storage.FileSystemStorage"
     --set STORAGES.staticfiles.BACKEND "portal_storage.PortalStaticS3Storage"

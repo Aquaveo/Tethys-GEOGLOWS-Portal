@@ -27,8 +27,24 @@ if [ "$RUN_STORE_SETUP" = "true" ]; then
   tethys link "persistent:${POSTGIS_SERVICE_NAME}" "tethysdash:ps_database:primary_db" \
     || echo "    (link may already exist - continuing)"
 
-  echo "==> syncstores tethysdash (DB pre-exists -> initializer/alembic only)"
-  tethys syncstores tethysdash
+  # Apply the tethysdash store schema DIRECTLY via its initializer (alembic upgrade head against the
+  # already-existing store DB). We do NOT use `tethys syncstores`: on Supabase its maintenance step
+  # opens a connection WITHOUT a dbname, so psycopg2 defaults the dbname to the username
+  # (tethys_default.<ref>) and fails with "database does not exist". Calling the initializer with the
+  # store engine skips that maintenance/CREATE-DATABASE path entirely. Idempotent (upgrades to head;
+  # stamps revisions whose objects already exist).
+  echo "==> apply tethysdash store schema (init_primary_db -> alembic upgrade head)"
+  DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-tethys_portal.settings}" python - <<'PY'
+import django
+django.setup()
+from tethysapp.tethysdash.app import App
+from tethysapp.tethysdash.model import init_primary_db
+engine = App.get_persistent_store_database("primary_db")
+# clean=False: skip cleanup_old_jsons(), which is non-essential tidying and currently throws
+# AttributeError on a fresh store (would abort init even though the schema upgrade succeeded).
+init_primary_db(engine, first_time=True, clean=False)
+print("tethysdash store schema applied (alembic upgrade head).")
+PY
 fi
 
 # NOTE: tethysdash plugin static collection moved to publish-static.sh (it must run right before

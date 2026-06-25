@@ -1,5 +1,6 @@
 [
   "Org=acme",
   "App=portal",
-  "BucketName=acme-portal-static"
+  "BucketName=acme-portal-static",
+  "AlbDomainName=<alb-dns-name>"
 ]
