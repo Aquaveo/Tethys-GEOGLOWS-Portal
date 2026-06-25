@@ -100,6 +100,11 @@ RUN git clone https://github.com/tethysplatform/tethysapp-tethys_dash.git \
   && uv pip install --no-cache "${TETHYS_APPS_ROOT}/tethysdash" \
   && uv pip install --no-cache "git+https://github.com/FIRO-Tethys/tethysdash_examples"
 
+# geoglows tethysdash plugin (s3-cache branch: pluggable workspace/S3 plot-data cache). The [s3]
+# extra pulls boto3 (already present via django-storages, but kept explicit).
+RUN uv pip install --no-cache \
+      "tethysdash_plugin_geoglows[s3] @ git+https://github.com/FIRO-Tethys/tethysdash_plugin_geoglows.git@s3-cache"
+
 # world-readable so it works even if the image is ever run as non-root
 RUN chmod -R a+rX /opt/python /opt/conda
 # tethysdash writes into its OWN package dir at runtime (public/{images,data} via
