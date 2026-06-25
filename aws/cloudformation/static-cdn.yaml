@@ -18,11 +18,22 @@ Parameters:
   AlbDomainName:
     Type: String
     Description: Portal ALB DNS name (CloudFront default origin); e.g. my-portal-alb-123.us-east-1.elb.amazonaws.com
+  PortalDomain:
+    Type: String
+    Default: ""
+    Description: Public domain for the portal (CloudFront alternate domain), e.g. enee.geoglows.org. Empty = use the *.cloudfront.net domain only.
+  AcmCertificateArn:
+    Type: String
+    Default: ""
+    Description: ACM cert ARN (us-east-1) for PortalDomain. Required if PortalDomain is set.
   PriceClass:
     Type: String
     Default: PriceClass_100
     AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
     Description: CloudFront edge coverage (100 = NA/EU only, cheapest).
+
+Conditions:
+  HasCustomDomain: !Not [!Equals [!Ref PortalDomain, ""]]
 
 Resources:
   StaticBucket:
@@ -65,6 +76,13 @@ Resources:
         Comment: !Sub "${Org}-${App} portal front (ALB default + S3 /static/*)"
         PriceClass: !Ref PriceClass
         HttpVersion: http2and3
+        Aliases: !If [HasCustomDomain, [!Ref PortalDomain], !Ref "AWS::NoValue"]
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref AcmCertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
         Origins:
           # S3 origin - serves /static/* (collected static, OAC-locked, private bucket).
           - Id: s3origin
